@@ -18,7 +18,6 @@ readonly ARC_DIR="$TMP_DIR/$ARC_NAME"
 readonly TMP_TAR_NAME="$TMP_DIR/archive.tar.gz"
 nextbuildnumber=
 plugin=
-job_backup_param="-name \"*.xml\""
 
 if [ -z "$JENKINS_HOME" -o -z "$DEST_FILE" ] ; then
   usage >&2
