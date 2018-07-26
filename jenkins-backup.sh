@@ -33,8 +33,7 @@ while [ "$1" != "" ]; do
         -h|--help)              usage >&2
                                 exit 1
                                 ;;
-        *)                      usage >&2
-                                exit 1
+        *)
     esac
     shift
 done
