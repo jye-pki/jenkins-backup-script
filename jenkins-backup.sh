@@ -46,7 +46,6 @@ done
 cp "$JENKINS_HOME/"*.xml "$ARC_DIR"
 
 if [ "$plugin" = "1" ]; then
-  echo '========== Backup plugins =========='
   cp "$JENKINS_HOME/plugins/"*.[hj]pi "$ARC_DIR/plugins"
   hpi_pinned_count=$(find $JENKINS_HOME/plugins/ -name *.hpi.pinned | wc -l)
   jpi_pinned_count=$(find $JENKINS_HOME/plugins/ -name *.jpi.pinned | wc -l)
@@ -54,28 +53,24 @@ if [ "$plugin" = "1" ]; then
     cp "$JENKINS_HOME/plugins/"*.[hj]pi.pinned "$ARC_DIR/plugins"
   fi
 else
-  echo '========== Skip backup plugins =========='
+  echo 'Skip backup plugins'
 fi
 
-echo '========== Backup users =========='
 if [ "$(ls -A $JENKINS_HOME/users/)" ]; then
   cp -R "$JENKINS_HOME/users/"* "$ARC_DIR/users"
 fi
 
-echo '========== Backup secrets =========='
 if [ "$(ls -A $JENKINS_HOME/secrets/)" ] ; then
   cp -R "$JENKINS_HOME/secrets/"* "$ARC_DIR/secrets"
 fi
 
-echo '========== Backup nodes =========='
 if [ "$(ls -A $JENKINS_HOME/nodes/)" ] ; then
   cp -R "$JENKINS_HOME/nodes/"* "$ARC_DIR/nodes"
 fi
 
-job_backup_param = '-name "*.xml"'
-echo '========== Backup jobs =========='
+job_backup_param = "-name \"*.xml\""
 if [ "$nextbuildnumber" = "1" ]; then
-  job_backup_param = '\( -name "*.xml" -o -name "nextBuildNumber" \)'
+  job_backup_param = "\( -name \"*.xml\" -o -name \"nextBuildNumber\" \)"
   echo 'Need next build number'
 else
   echo 'No need next build number'
