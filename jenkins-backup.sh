@@ -18,7 +18,7 @@ readonly ARC_DIR="$TMP_DIR/$ARC_NAME"
 readonly TMP_TAR_NAME="$TMP_DIR/archive.tar.gz"
 nextbuildnumber=
 plugin=
-job_backup_param = "-name \"*.xml\""
+job_backup_param="-name \"*.xml\""
 
 if [ -z "$JENKINS_HOME" -o -z "$DEST_FILE" ] ; then
   usage >&2
@@ -70,7 +70,7 @@ if [ "$(ls -A $JENKINS_HOME/nodes/)" ] ; then
 fi
 
 if [ "$nextbuildnumber" = "1" ]; then
-  job_backup_param = "\( -name \"*.xml\" -o -name \"nextBuildNumber\" \)"
+  job_backup_param="\( -name \"*.xml\" -o -name \"nextBuildNumber\" \)"
   echo 'Need next build number'
 else
   echo 'No need next build number'
