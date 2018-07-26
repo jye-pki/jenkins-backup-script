@@ -2,7 +2,10 @@
 
 ##################################################################################
 function usage(){
-  echo "usage: $(basename $0) /path/to/jenkins_home archive.tar.gz"
+  echo "usage: $(basename $0) </path/to/jenkins_home> <archive.tar.gz>\
+ [-n|--nextbuildnumber]\
+ [-p|--needplugin]\
+ [-h|--help]"
 }
 ##################################################################################
 
@@ -13,11 +16,28 @@ readonly TMP_DIR="$CUR_DIR/tmp"
 readonly ARC_NAME="jenkins-backup"
 readonly ARC_DIR="$TMP_DIR/$ARC_NAME"
 readonly TMP_TAR_NAME="$TMP_DIR/archive.tar.gz"
+nextbuildnumber=
+plugin=
 
 if [ -z "$JENKINS_HOME" -o -z "$DEST_FILE" ] ; then
   usage >&2
   exit 1
 fi
+
+while [ "$1" != "" ]; do
+    case $1 in
+        -n|--nextbuildnumber)   nextbuildnumber=1
+                                ;;
+        -p|--plugin)            plugin=1
+                                ;;
+        -h|--help)              usage >&2
+                                exit 1
+                                ;;
+        *)                      usage >&2
+                                exit 1
+    esac
+    shift
+done
 
 rm -rf "$ARC_DIR" "$TMP_TAR_NAME"
 for i in plugins jobs users secrets nodes;do
@@ -26,23 +46,40 @@ done
 
 cp "$JENKINS_HOME/"*.xml "$ARC_DIR"
 
-cp "$JENKINS_HOME/plugins/"*.[hj]pi "$ARC_DIR/plugins"
-hpi_pinned_count=$(find $JENKINS_HOME/plugins/ -name *.hpi.pinned | wc -l)
-jpi_pinned_count=$(find $JENKINS_HOME/plugins/ -name *.jpi.pinned | wc -l)
-if [ $hpi_pinned_count -ne 0 -o $jpi_pinned_count -ne 0 ]; then
-  cp "$JENKINS_HOME/plugins/"*.[hj]pi.pinned "$ARC_DIR/plugins"
+if [ "$plugin" = "1" ]; then
+  echo '========== Backup plugins =========='
+  cp "$JENKINS_HOME/plugins/"*.[hj]pi "$ARC_DIR/plugins"
+  hpi_pinned_count=$(find $JENKINS_HOME/plugins/ -name *.hpi.pinned | wc -l)
+  jpi_pinned_count=$(find $JENKINS_HOME/plugins/ -name *.jpi.pinned | wc -l)
+  if [ $hpi_pinned_count -ne 0 -o $jpi_pinned_count -ne 0 ]; then
+    cp "$JENKINS_HOME/plugins/"*.[hj]pi.pinned "$ARC_DIR/plugins"
+  fi
+else
+  echo '========== Skip backup plugins =========='
 fi
 
+echo '========== Backup users =========='
 if [ "$(ls -A $JENKINS_HOME/users/)" ]; then
   cp -R "$JENKINS_HOME/users/"* "$ARC_DIR/users"
 fi
 
+echo '========== Backup secrets =========='
 if [ "$(ls -A $JENKINS_HOME/secrets/)" ] ; then
   cp -R "$JENKINS_HOME/secrets/"* "$ARC_DIR/secrets"
 fi
 
+echo '========== Backup nodes =========='
 if [ "$(ls -A $JENKINS_HOME/nodes/)" ] ; then
   cp -R "$JENKINS_HOME/nodes/"* "$ARC_DIR/nodes"
+fi
+
+job_backup_param = '-name "*.xml"'
+echo '========== Backup jobs =========='
+if [ "$nextbuildnumber" = "1" ]; then
+  job_backup_param = '\( -name "*.xml" -o -name "nextBuildNumber" \)'
+  echo 'Need next build number'
+else
+  echo 'No need next build number'
 fi
 
 function backup_jobs {
@@ -54,7 +91,7 @@ function backup_jobs {
       [ "$job_name" = "." ] && continue
       [ "$job_name" = ".." ] && continue
       [ -d "$JENKINS_HOME/jobs/$rel_depth/$job_name" ] && mkdir -p "$ARC_DIR/jobs/$rel_depth/$job_name/"
-      find "$JENKINS_HOME/jobs/$rel_depth/$job_name/" -maxdepth 1 \( -name "*.xml" -o -name "nextBuildNumber" \) -print0 | xargs -0 -I {} cp {} "$ARC_DIR/jobs/$rel_depth/$job_name/"
+      find "$JENKINS_HOME/jobs/$rel_depth/$job_name/" -maxdepth 1 $job_backup_param -print0 | xargs -0 -I {} cp {} "$ARC_DIR/jobs/$rel_depth/$job_name/"
       if [ -f "$JENKINS_HOME/jobs/$rel_depth/$job_name/config.xml" ] && [ "$(grep -c "com.cloudbees.hudson.plugins.folder.Folder" "$JENKINS_HOME/jobs/$rel_depth/$job_name/config.xml")" -ge 1 ] ; then
         #echo "Folder! $JENKINS_HOME/jobs/$rel_depth/$job_name/jobs"
         backup_jobs "$JENKINS_HOME/jobs/$rel_depth/$job_name/jobs"
