@@ -40,13 +40,14 @@ while [ "$1" != "" ]; do
 done
 
 rm -rf "$ARC_DIR" "$TMP_TAR_NAME"
-for i in plugins jobs users secrets nodes;do
+for i in jobs users secrets nodes;do
   mkdir -p "$ARC_DIR"/$i
 done
 
 cp "$JENKINS_HOME/"*.xml "$ARC_DIR"
 
 if [ "$plugin" = "1" ]; then
+  mkdir -p "$ARC_DIR"/plugins
   cp "$JENKINS_HOME/plugins/"*.[hj]pi "$ARC_DIR/plugins"
   hpi_pinned_count=$(find $JENKINS_HOME/plugins/ -name *.hpi.pinned | wc -l)
   jpi_pinned_count=$(find $JENKINS_HOME/plugins/ -name *.jpi.pinned | wc -l)
